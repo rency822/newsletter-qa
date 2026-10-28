@@ -31,3 +31,17 @@ test('empty model tokens are dropped', () => {
   assert.deepEqual(parseCoworkerList('abc1_ - T')[0].modelTokens, []);
   assert.deepEqual(parseCoworkerList('abc1__x_ - T')[0].modelTokens, ['x']);
 });
+
+test('code followed by a space but no " - " still splits code and title', () => {
+  assert.deepEqual(parseCoworkerList("tkc0232_redblack_matt Red Black's Revenge")[0],
+    {code:'tkc0232_redblack_matt', title:"Red Black's Revenge", note:null, modelTokens:['redblack','matt']});
+});
+
+test('a title-only line starting with a short code-like word is not split', () => {
+  assert.deepEqual(parseCoworkerList('B2 Bomber Night')[0], {code:null, title:'B2 Bomber Night', note:null, modelTokens:[]});
+});
+
+test('repeated identical lines are kept once', () => {
+  const twice = "ffd0235_tan_franco - Tan\nffdhq0157_jeff - Jeff\nffd0235_tan_franco - Tan\n  ffdhq0157_jeff - Jeff  \n";
+  assert.deepEqual(parseCoworkerList(twice).map(r=>r.code), ['ffd0235_tan_franco','ffdhq0157_jeff']);
+});

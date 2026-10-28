@@ -1,13 +1,20 @@
 const CODE_RE = /^[a-z]+\d+[a-z0-9_]*$/i;
 
+// A line with no " - " can still start with a code ("tkc0232_redblack_matt Red Black's Revenge").
+// Only codes containing "_" qualify here, so a title like "B2 Bomber Night" is not split.
+const CODE_SPACE_RE = /^([a-z]+\d+[a-z0-9]*_[a-z0-9_]*)\s+(.+)$/i;
+
 export function parseCoworkerList(text) {
   const rows = [];
+  const seen = new Set();
   for (const raw of String(text).split(/\r?\n/)) {
     const line = raw.trim();
-    if (!line) continue;
+    if (!line || seen.has(line)) continue; // a list pasted twice must not double the expected scenes
+    seen.add(line);
     const idx = line.indexOf(' - ');
-    const left = idx === -1 ? line : line.slice(0, idx).trim();
-    const right = idx === -1 ? '' : line.slice(idx + 3).trim();
+    const spaced = idx === -1 ? line.match(CODE_SPACE_RE) : null;
+    const left = spaced ? spaced[1] : idx === -1 ? line : line.slice(0, idx).trim();
+    const right = spaced ? spaced[2].trim() : idx === -1 ? '' : line.slice(idx + 3).trim();
     if (CODE_RE.test(left)) {
       let title = right;
       let note = null;
