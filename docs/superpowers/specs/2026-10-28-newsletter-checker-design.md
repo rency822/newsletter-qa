@@ -25,7 +25,7 @@ The program is auto-detected from the email subject prefix (`RadicalCash -`, `Ke
 - **Release date:** the date printed in the newsletter body (e.g. "October 26, 2026"). It is editable.
 - **Generation date:** the last Thursday strictly before the release date. Example: release Mon Oct 26 → generated Thu Oct 22. It is editable.
 - **Window:** from generation − 13 days to generation − 7 days, inclusive. This is the Friday→Thursday week that ends one week before generation. Example: Fri Oct 9 – Thu Oct 15.
-- This rule was confirmed against the Oct 26 RadicalCash issue (all scenes Oct 9–15; AD4X's Oct 8 scene was excluded) and the Oct 26 Kenny's Pennies issue (12/12 scenes Oct 9–15).
+- This rule was confirmed against the Oct 26 RadicalCash issue (all scenes Oct 9–15; AD4X's Oct 8 scene was excluded) and the Oct 26 Kenny's Pennies issue (13/13 scenes Oct 9–15).
 - The window is used only in schedule mode (RadicalCash and Kenny's Pennies).
 
 ## 4. Inputs
@@ -39,7 +39,8 @@ The program is auto-detected from the email subject prefix (`RadicalCash -`, `Ke
 ### 5.1 Schedule
 
 - Each `button.calendar-event` yields one entry with these fields:
-  - **site label:** the text of `.event-domain` before ` - admin.`, e.g. `Lildsplayhouse Tour`
+  - **site key:** the full `.event-domain` text, e.g. `Lildsplayhouse Tour - admin.lildsplayhouse.com`. It is split into a **label** (before ` - admin.`) and an **admin host** (after ` - `). The admin host is needed because two different sites both use the label `Sex Tapes` (`admin.sextapes.com` and `admin.studiovanniall.com`).
+  - **media:** `hasVideo` / `hasPhoto`, from the `.media-flag.video` and `.media-flag.photo` elements
   - **title:** `.event-title`
   - **status:** the class `status-*`, one of published, scheduled, unpublished, or encoding
   - **date:** `data-day`
@@ -60,6 +61,7 @@ The program is auto-detected from the email subject prefix (`RadicalCash -`, `Ke
 
 - A built-in table maps each studio to its program, its schedule site labels, and its newsletter header aliases.
 - The user can edit the table in the page. Edits are saved in browser `localStorage`, with a "Reset to defaults" button.
+- Each mapping label is either a plain label (it matches that label under any admin host) or `Label @ admin.host` (it matches only that admin host). For example, Sextapes is `Sex Tapes @ admin.sextapes.com`.
 - By default only the main label for a studio counts. Sub-sites such as "BJ Raw BTS", "Membership Exclusive", and "mobile … MA" are not counted unless they are added to the studio's labels.
 
 The default table is in Appendix A. Studios marked *(guess)* were inferred and should be confirmed.
@@ -76,12 +78,13 @@ The default table is in Appendix A. Studios marked *(guess)* were inferred and s
 - **Fuzzy match:** similarity is at least 0.85, measured by Dice coefficient on character bigrams. Candidates are compared only within the same studio.
 - **Assignment:** each newsletter scene is paired one-to-one with its best candidate (greedy, best score first), so two schedule entries never share one newsletter scene.
 - **Schedule mode:**
-  - The expected set is every published entry in the window whose site label maps to a studio of this program.
+  - The expected set is every entry that meets all four conditions: status is published, the date is in the window, `hasVideo` is true, and the site maps to a studio of this program. Photo-only updates are excluded because these are tube-clip newsletters. Without this rule, Red-XXX's photo set "Resist Temptation." (Oct 11) would be reported missing.
   - Each newsletter scene is then compared against all schedule entries for its studio, across all dates and statuses, so that out-of-window and unpublished scenes can be classified.
 - **IndieBucks mode:** the coworker list is the expected set. There is no studio mapping and there are no dates.
   - **Line parsing:** each line splits into a code (before the first ` - `), a title, and an optional trailing note in parentheses, e.g. `(No 10 min tube for this scene)`. The note is shown in the report and is not used for matching.
   - **Model hint from the code:** the code is split on `_`. The site prefix and IDs (e.g. `boyn1253`) and part markers (e.g. `part04`) are dropped. The remaining tokens (e.g. `romeotwink`, `mitchschif`) are compared with the newsletter scene's models, after the model names are lowercased and their spaces removed.
-  - **Score:** title similarity, plus a bonus of +0.15 for each model token that matches, capped at 1.0. The same one-to-one greedy assignment is used as in schedule mode.
+  - **Ranking score:** title Dice similarity plus 0.15 for each matching model token. The score is not capped, so `boyn1195` (title and model match) outranks `boyn1253` (title only) for the same newsletter scene. The same one-to-one greedy assignment is used as in schedule mode.
+  - **Classification:** a pair whose title Dice is at least 0.85 is matched or fuzzy matched. A pair below that is a Title mismatch only if every model token in the code matched. Anything else is left unpaired.
   - **Mistitled line:** when a line's best pairing is a newsletter scene whose title differs but whose models match, the row is flagged ⚠️ **Title mismatch**. The row shows both titles.
   - **Typos:** close but inexact titles (e.g. "an Madrox & Yuri…" vs "Ian Madrox & Yuri…") are marked ✅ Fuzzy match.
   - **Fixture expectations** (the Oct 21 IndieBucks Fetish issue and the 17-line coworker list):
@@ -144,8 +147,14 @@ The default table is in Appendix A. Studios marked *(guess)* were inferred and s
 
 - **Unit tests** (Node) use the real fixtures: the Oct 2026 schedule HTML and the RadicalCash, Kenny's Pennies, and IndieBucks `.eml` files. They assert that:
   - release Oct 26 → generation Oct 22 → window Oct 9–15
-  - Kenny's Pennies: 12 matched, 0 missing
-  - RadicalCash: WankItNow "Work Me Out", "Sexy Videro", "Sensual Groove", and "Very Happy Ending" are ❌ missing
+  - Kenny's Pennies: 13 matched; the only missing scene is Miss Malorie Switch "Wife Saves Your Job" (Oct 13), provided it stays mapped to Kenny's Pennies
+  - RadicalCash: 38 newsletter scenes are all matched, and exactly these 9 are ❌ missing:
+    - WankItNow: Work Me Out, Sexy Videro, Sensual Groove, Very Happy Ending
+    - BigGulpGirls: Bad Bella
+    - AmazingFilms: Jazz Gives Great Service
+    - LaBellaDX: The Lesbian Animation Session
+    - DoggVision: Misty Rein Threesome Behind the Scenes
+    - Bemefi: StepSisterLove 6 Scene 2
   - "Balloon Tits Jennifer Is Back For More Of Roberts Cock" fuzzy- or exact-matches "…Robert's Cock"
   - the Dirty Auditions duplicates merge into one entry
   - `test1` through `test4` and `TEST_…` titles are excluded
@@ -184,7 +193,7 @@ Format: **Studio** → schedule site label(s) · newsletter header.
 | Pervect | Pervect | PERVECT |
 | PurgatoryX | Purgatory X | PURGATORY X |
 | Ricky'sRoom | Ricky's Room | RICKY'S ROOM |
-| Sextapes | Sex Tapes (domain sextapes.com) | SEX TAPES |
+| Sextapes | Sex Tapes @ admin.sextapes.com | SEX TAPES |
 | YesGirlz | Yes Girlz | YES GIRLZ |
 | LegendaryX | Legendaryx | LEGENDARYX |
 | ZFilmz | Z Filmz Originals | Z FILMZ ORIGINALS |
