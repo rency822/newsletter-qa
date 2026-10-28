@@ -1,0 +1,15 @@
+{
+  "name": "newsletter-checker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --import ./tests/setup.js tests/*.unit.test.js",
+    "build": "node build.mjs",
+    "e2e": "node --test tests/e2e.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "linkedom": "^0.18.14"
+  }
+}
