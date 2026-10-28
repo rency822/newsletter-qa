@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeWindow } from '../src/windowCalc.js';
+import { computeWindow, windowFromGeneration } from '../src/windowCalc.js';
 
 const pick = (w) => ({ generation: w.generation, start: w.start, end: w.end });
 
@@ -21,4 +21,14 @@ test('days has 7 entries from start to end', () => {
   assert.equal(w.days.length, 7);
   assert.equal(w.days[0], w.start);
   assert.equal(w.days[6], w.end);
+});
+
+test('windowFromGeneration derives gen-13..gen-7', () => {
+  const w = windowFromGeneration('2026-10-22');
+  assert.deepEqual(pick(w), { generation: '2026-10-22', start: '2026-10-09', end: '2026-10-15' });
+  assert.equal(w.days.length, 7);
+});
+test('windowFromGeneration agrees with computeWindow and crosses months', () => {
+  const c = computeWindow('2026-11-09');
+  assert.deepEqual(pick(windowFromGeneration(c.generation)), pick(c));
 });

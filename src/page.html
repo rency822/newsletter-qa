@@ -1,0 +1,207 @@
+<title>Newsletter Checker</title>
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f4; --text: #1b1f27; --muted: #5a6372;
+  --border: #d5d9e1; --accent: #2457d6; --accent-text: #ffffff; --focus: #2457d6;
+  --ok-bg: #dff3e4; --ok-fg: #14602a; --bad-bg: #fbe0df; --bad-fg: #9a1b17;
+  --warn-bg: #fdeccc; --warn-fg: #7a4a00; --neutral-bg: #e6e9ef; --neutral-fg: #3b4352;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171c; --surface: #1d2128; --surface-2: #262b34; --text: #e6e9ef; --muted: #9aa3b2;
+    --border: #384050; --accent: #7aa2ff; --accent-text: #0e1626; --focus: #9bb9ff;
+    --ok-bg: #173a22; --ok-fg: #8fe0a6; --bad-bg: #4a1d1c; --bad-fg: #ffb0ac;
+    --warn-bg: #46330c; --warn-fg: #f5cf80; --neutral-bg: #2c3340; --neutral-fg: #c3cbd8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --surface: #1d2128; --surface-2: #262b34; --text: #e6e9ef; --muted: #9aa3b2;
+  --border: #384050; --accent: #7aa2ff; --accent-text: #0e1626; --focus: #9bb9ff;
+  --ok-bg: #173a22; --ok-fg: #8fe0a6; --bad-bg: #4a1d1c; --bad-fg: #ffb0ac;
+  --warn-bg: #46330c; --warn-fg: #f5cf80; --neutral-bg: #2c3340; --neutral-fg: #c3cbd8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 20px; margin: 0 0 2px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid > .card { margin-bottom: 0; min-width: 0; }
+label, .lbl { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+.card > :first-child { margin-top: 0; }
+textarea, input[type=date], select, input[type=file] {
+  width: 100%; max-width: 100%; font: inherit; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; }
+textarea { min-height: 84px; resize: vertical; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+input[type=file] { padding: 5px; font-size: 13px; }
+.slot { margin-bottom: 10px; }
+.slot:last-child { margin-bottom: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.row > div { flex: 1 1 150px; min-width: 0; }
+button { font: inherit; cursor: pointer; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); padding: 7px 12px; min-height: 36px; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; padding: 8px 20px; }
+button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.hint { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
+#window-label { font-weight: 600; margin-top: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+#errors:empty { display: none; }
+#errors { margin-bottom: 14px; }
+.msg { padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid; }
+.msg.error { background: var(--bad-bg); color: var(--bad-fg); border-color: var(--bad-fg); }
+.msg.warn { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-fg); }
+#summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+#summary[hidden], #output[hidden], [hidden] { display: none !important; }
+.stat { flex: 1 1 100px; border-radius: 8px; padding: 10px 14px; border: 1px solid var(--border); }
+.stat b { display: block; font-size: 26px; line-height: 1.1; }
+.stat.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.stat.missing { background: var(--bad-bg); color: var(--bad-fg); }
+.stat.review { background: var(--warn-bg); color: var(--warn-fg); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.toolbar .spacer { flex: 1 1 auto; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
+tr.group td { background: var(--surface-2); font-weight: 700; padding: 6px 10px; }
+.chip { display: inline-block; white-space: nowrap; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.chip.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.chip.bad { background: var(--bad-bg); color: var(--bad-fg); }
+.chip.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.chip.neutral { background: var(--neutral-bg); color: var(--neutral-fg); }
+.nowrap { white-space: nowrap; }
+.sched { color: var(--muted); font-size: 13px; }
+.note { color: var(--muted); font-size: 13px; }
+.code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+a { color: var(--accent); }
+details { margin-bottom: 14px; }
+summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+details table { font-size: 13px; }
+details textarea { min-height: 60px; font-size: 12px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn-fg); margin-left: 6px; }
+.expected-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.expected-list li { padding: 3px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.empty { color: var(--muted); padding: 16px 4px; }
+.mapwrap { overflow-x: auto; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .wrap { padding: 16px 16px 40px; }
+  #results-table thead { display: none; }
+  #results-table, #results-table tbody { display: block; border: 0; background: none; }
+  #results-table tr { display: block; }
+  #results-table tr.group { margin-top: 12px; }
+  #results-table tr.group td { display: block; border-radius: 6px 6px 0 0; border: 1px solid var(--border); }
+  #results-table tr[data-status] { background: var(--surface); border: 1px solid var(--border); border-top: 0; padding: 4px 0; }
+  #results-table tr[data-status] + tr[data-status] { border-top: 1px solid var(--border); }
+  #results-table td { display: block; border: 0; padding: 3px 10px; }
+  #results-table td[data-label]:not(:empty)::before { content: attr(data-label) ": "; color: var(--muted); font-size: 12px; }
+  .mapwrap table, .mapwrap thead, .mapwrap tbody, .mapwrap tr, .mapwrap td { display: block; }
+  .mapwrap thead { display: none; }
+  .mapwrap tr { border-bottom: 1px solid var(--border); padding: 6px 0; }
+  .mapwrap td { border: 0; padding: 3px 0; }
+}
+</style>
+
+<div class="wrap">
+  <h1>Newsletter Checker</h1>
+  <p class="sub">Compare a newsletter against the publishing schedule (or the IndieBucks coworker list). Everything runs in this page; nothing is uploaded.</p>
+
+  <div class="grid">
+    <section class="card" id="schedule-card">
+      <h2>1. Schedule</h2>
+      <div id="schedule-slots">
+        <div class="slot">
+          <label for="schedule-input">Paste schedule page HTML</label>
+          <textarea id="schedule-input" placeholder="Paste the page source of the calendar" spellcheck="false"></textarea>
+          <label for="schedule-file">or choose .html file(s)</label>
+          <input type="file" id="schedule-file" accept=".html,.htm,text/html" multiple>
+        </div>
+      </div>
+      <div class="actions"><button type="button" id="add-month">+ Add another month</button></div>
+      <p class="hint">If the window spans two months, add the other month's page too.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Newsletter</h2>
+      <label for="eml-file">Open the .eml file</label>
+      <input type="file" id="eml-file" accept=".eml,message/rfc822">
+      <label for="eml-paste">or paste the raw message source</label>
+      <textarea id="eml-paste" placeholder="Paste raw .eml text" spellcheck="false"></textarea>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px">
+    <h2>3. Options</h2>
+    <div class="row">
+      <div><label for="program">Program</label>
+        <select id="program">
+          <option value="radicalcash">RadicalCash</option>
+          <option value="kennyspennies">KennysPennies</option>
+          <option value="indiebucks">IndieBucks</option>
+        </select></div>
+      <div><label for="release-date">Release date</label><input type="date" id="release-date"></div>
+      <div id="generation-wrap"><label for="generation-date">Generation date</label><input type="date" id="generation-date"></div>
+    </div>
+    <div id="window-label" aria-live="polite"></div>
+    <p class="hint" id="window-hint">Generation is the last Thursday before release. Edit it to override; the window is the 7 days ending 7 days before generation.</p>
+    <div id="coworker-wrap" hidden>
+      <label for="coworker-list">Coworker list</label>
+      <textarea id="coworker-list" placeholder="CODE123_model - Scene title (note)" spellcheck="false"></textarea>
+    </div>
+    <div class="actions"><button type="button" id="run" class="primary">Run check</button></div>
+  </section>
+
+  <div id="errors" role="alert"></div>
+
+  <div id="output" hidden>
+    <div id="summary">
+      <div class="stat ok"><b data-count="ok">0</b>OK (matched)</div>
+      <div class="stat missing"><b data-count="missing">0</b>Missing</div>
+      <div class="stat review"><b data-count="review">0</b>Needs review</div>
+    </div>
+    <div class="toolbar">
+      <div id="filters" role="group" aria-label="Filter results">
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="problems" aria-pressed="false">Problems</button>
+        <button type="button" data-filter="missing" aria-pressed="false">Missing</button>
+        <button type="button" data-filter="review" aria-pressed="false">Review</button>
+      </div>
+      <span class="spacer"></span>
+      <button type="button" id="copy-problems">Copy problems</button>
+      <button type="button" id="download-csv">Download CSV</button>
+      <span id="copy-status" class="hint" role="status"></span>
+    </div>
+    <table id="results-table">
+      <thead><tr><th>Status</th><th>Scene</th><th>Date</th><th>FHG</th><th>Details</th></tr></thead>
+      <tbody id="results"></tbody>
+    </table>
+    <p class="empty" id="no-rows" hidden>No rows match this filter.</p>
+  </div>
+
+  <details id="expected-list" style="margin-top:14px">
+    <summary>Expected from schedule (published with video in window)</summary>
+    <ul class="expected-list" id="expected-items"><li>Run a schedule check to see the list.</li></ul>
+  </details>
+
+  <details id="mapping-editor">
+    <summary>Studio mapping</summary>
+    <p class="hint">Schedule site labels and newsletter headers per studio, one per line. "Label @ host" matches only that admin host. Edits are saved in this browser.</p>
+    <div class="mapwrap">
+      <table>
+        <thead><tr><th>Studio</th><th>Program</th><th>Schedule labels</th><th>Newsletter headers</th></tr></thead>
+        <tbody id="mapping-body"></tbody>
+      </table>
+    </div>
+    <div class="actions"><button type="button" id="reset-mapping">Reset to defaults</button></div>
+  </details>
+</div>
+
+<script>/*SCRIPT*/</script>
