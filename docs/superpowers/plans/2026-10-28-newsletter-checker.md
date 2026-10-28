@@ -270,7 +270,7 @@ assert.equal(parseCoworkerList('\n\n  \n').length, 0);
 
 **Interfaces:**
 - Produces:
-  - `DEFAULT_MAPPING: Array<{studio, program: 'radicalcash'|'kennyspennies', labels: string[], headers: string[], guess?: true}>`, copied verbatim from spec Appendix A
+  - `DEFAULT_MAPPING: Array<{studio, program: 'radicalcash'|'kennyspennies', labels: string[], headers: string[], guess?: true}>`, copied verbatim from spec Appendix A. Appendix entries written "X, Y (all @ host)" expand to `X @ host`, `Y @ host`; entries with no `@` stay plain.
   - `studioForSite(mapping, program, entry): string|null`
   - `studioForHeader(mapping, program, header): string|null`
 
@@ -283,7 +283,10 @@ assert.equal(m.filter(r=>r.program==='kennyspennies').length, 14);
 assert.equal(studioForSite(m,'radicalcash',{label:'Sex Tapes',adminHost:'admin.sextapes.com'}), 'Sextapes');
 assert.equal(studioForSite(m,'radicalcash',{label:'Sex Tapes',adminHost:'admin.studiovanniall.com'}), null); // Review Focus 2
 assert.equal(studioForSite(m,'radicalcash',{label:'RickysResort Season 2',adminHost:'admin.rickysresort.com'}), "Ricky's Resort");
-assert.equal(studioForSite(m,'radicalcash',{label:'BJ Raw BTS',adminHost:'admin.bjraw.com'}), null);
+assert.equal(studioForSite(m,'radicalcash',{label:'BJ Raw BTS',adminHost:'admin.bjraw.com'}), 'BJRaw');       // sub-site combined
+assert.equal(studioForSite(m,'radicalcash',{label:'Reels',adminHost:'admin.gotfilled.com'}), 'GotFilled');
+assert.equal(studioForSite(m,'radicalcash',{label:'mobile content MA',adminHost:'admin.pawgemily.com'}), null);
+assert.equal(studioForSite(m,'radicalcash',{label:'UpskirtJerk',adminHost:'admin.wankitnow.com'}), null);   // sibling brand
 assert.equal(studioForSite(m,'radicalcash',{label:'Yummy Couple',adminHost:'admin.yummycouple.com'}), null); // other program
 assert.equal(studioForHeader(m,'radicalcash',"LIL D'S PLAYHOUSE"), 'LildPlayHouse');
 assert.equal(studioForHeader(m,'radicalcash','Lil Ds Playhouse'), 'LildPlayHouse');

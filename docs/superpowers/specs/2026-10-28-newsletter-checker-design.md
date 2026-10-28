@@ -62,7 +62,8 @@ The program is auto-detected from the email subject prefix (`RadicalCash -`, `Ke
 - A built-in table maps each studio to its program, its schedule site labels, and its newsletter header aliases.
 - The user can edit the table in the page. Edits are saved in browser `localStorage`, with a "Reset to defaults" button.
 - Each mapping label is either a plain label (it matches that label under any admin host) or `Label @ admin.host` (it matches only that admin host). For example, Sextapes is `Sex Tapes @ admin.sextapes.com`.
-- By default only the main label for a studio counts. Sub-sites such as "BJ Raw BTS", "Membership Exclusive", and "mobile … MA" are not counted unless they are added to the studio's labels.
+- **Sub-sites are combined into their parent studio.** BTS, Interviews, Reels, Premium/Sale, mobile, Season 2, Casting, and model sub-sites (listed in Appendix A) count as that studio. Generic sub-site labels that several networks share (`Reels`, `mobile content MA`, `BTS`, `Interviews`) are always host-qualified.
+- **Sibling brands stay separate.** These share an admin host with a studio but are not its sub-sites, e.g. UpskirtJerk, BoppingBabes, and DownblouseJerk under `admin.wankitnow.com`, or the other TWM brands under `admin.topwebmodels.com`. The Oct 26 WANKITNOW section contains only WankItNow-labelled scenes, which confirms this.
 
 The default table is in Appendix A. Studios marked *(guess)* were inferred and should be confirmed.
 
@@ -176,23 +177,23 @@ Format: **Studio** → schedule site label(s) · newsletter header.
 
 | Studio | Schedule label(s) | Newsletter header |
 |---|---|---|
-| AD4X | AD4X | AD4X |
-| Alterotic | Alterotic | ALTEROTIC |
+| AD4X | AD4X, Casting @ admin.ad4x.com, Casting Party @ admin.ad4x.com, Pixie Dust @ admin.ad4x.com | AD4X |
+| Alterotic | Alterotic, Kyla Keys, Madame Ouija, Maya Romero, Michelle Masque, Robin Coffins, Taylor Nicole, TigerLilly, Titi Ramone (all @ admin.alterotic.com) | ALTEROTIC |
 | AmazingFilms | Amazing Films | AMAZING FILMS |
-| BJRaw | BJ Raw | BJ RAW |
+| BJRaw | BJ Raw, BJ Raw BTS, BJ Raw Interviews, Reels @ admin.bjraw.com | BJ RAW |
 | DickHDdaily | Dick Hd Daily | DICK HD DAILY |
-| DireDesires | Dire Desires | DIRE DESIRES |
-| GotFilled | Gotfilled | GOTFILLED |
+| DireDesires | Dire Desires, Premium @ admin.diredesires.com, Sale @ admin.diredesires.com | DIRE DESIRES |
+| GotFilled | Gotfilled, Gotfilled BTS, Gotfilled Interviews, Reels @ admin.gotfilled.com | GOTFILLED |
 | Hardwerk | Hard Werk | HARDWERK |
 | Inserted | Inserted | INSERTED |
 | JAV888 | JAV 888 | JAV 888 |
-| JazztheStallion | jazzthestallion | JAZZ THE STALLION |
+| JazztheStallion | jazzthestallion, mobile content MA @ admin.jazzthestallion.com | JAZZ THE STALLION |
 | Lezkey | Lezkey | LEZKEY |
 | LucidFlix | Lucid flix | LUCID FLIX |
 | NikkiZee | Nikki Zee | NIKKI ZEE |
 | Pervect | Pervect | PERVECT |
 | PurgatoryX | Purgatory X | PURGATORY X |
-| Ricky'sRoom | Ricky's Room | RICKY'S ROOM |
+| Ricky'sRoom | Ricky's Room, Ricky's Room BTS | RICKY'S ROOM |
 | Sextapes | Sex Tapes @ admin.sextapes.com | SEX TAPES |
 | YesGirlz | Yes Girlz | YES GIRLZ |
 | LegendaryX | Legendaryx | LEGENDARYX |
@@ -207,7 +208,7 @@ Format: **Studio** → schedule site label(s) · newsletter header.
 | SexyModernBull | Sexy Modern Bull | SEXY MODERN BULL |
 | WankItNow | WankItNow | WANKITNOW |
 | Javhub | JavHub | JAVHUB |
-| DripDropProd | Drip Drop Prod | DRIP DROP PROD |
+| DripDropProd | Drip Drop Prod, Membership Exclusive, Stories @ admin.dripdropprod.net, VOD Exclusive | DRIP DROP PROD |
 | LukeCooper | Luke CooperX | LUKE COOPERX |
 | TheArtemixxx | The Artemixxx | THEARTEMIXXX |
 | LildPlayHouse | Lildsplayhouse Tour | LIL D'S PLAYHOUSE |
@@ -222,14 +223,14 @@ Format: **Studio** → schedule site label(s) · newsletter header.
 | CollectiveCorruption | CollectiveCorruption | COLLECTIVE CORRUPTION |
 | MyAsianGFs | Myasiangfs | MY ASIAN GFS |
 | WydeSyde | WydeSyde | WYDESYDE |
-| MajestyNasty | Majestynasty | MAJESTY NASTY |
+| MajestyNasty | Majestynasty, mobile Majestynasty MA | MAJESTY NASTY |
 | CosplayXGirls | Cosplayxgirls | COSPLAYXGIRLS |
 | BeastNKitty | Beastnkitty | BEASTNKITTY |
 | DoggNuts | DoggNuts | DOGGNUTS |
 | DoggVision | Doggvision | DOGGVISION |
 | GingerVixen | gingervixen | GINGER VIXEN |
 | GoGoWorldPorn | Gogo World Porn | GOGO WORLD PORN |
-| LaBellaDX | Labelladx | LABELLADX |
+| LaBellaDX | Labelladx, Behind The Scenes @ admin.labelladx.com, Femdom Pegging, Slutwife Chronicles | LABELLADX |
 | XXXTryout | xxxtryout | XXXTRYOUT |
 | InMelanin | Inmelanin | INMELANIN |
 | 2Girls1Camera | 2girls1camera | 2GIRLS1CAMERA |
@@ -241,13 +242,13 @@ Format: **Studio** → schedule site label(s) · newsletter header.
 | ShesBrandNew | ShesBrandNew | SHES BRAND NEW |
 | TWMClassics | TWM Classics | TWM CLASSICS |
 | TWMInterviews | TWM Interviews | TWM INTERVIEWS |
-| HobyBuchanon | hobybuchanon | HOBY BUCHANON |
+| HobyBuchanon | hobybuchanon, Hoby Buchanon BTS | HOBY BUCHANON |
 
 ### Kenny's Pennies
 
 | Studio | Schedule label(s) | Newsletter header |
 |---|---|---|
-| MariskaX | MariskaX | MARISKA X |
+| MariskaX | MariskaX, MariskaX Fans | MARISKA X |
 | YummyCouple | Yummy Couple | YUMMY COUPLE |
 | Red-XXX | Red-xxx | RED XXX |
 | MelodyPleasure | MelodyPleasure | MELODY PLEASURE |
@@ -256,7 +257,7 @@ Format: **Studio** → schedule site label(s) · newsletter header.
 | Dacada | Dacada | DACADA |
 | NylonPerv | Nylon Perv | NYLON PERV |
 | JamieYoung | Jamie-Young | JAMIE-YOUNG |
-| Lady-Sonia *(guess)* | Lady Sonia | LADY SONIA |
+| Lady-Sonia *(guess)* | Lady Sonia, Lady Sonia Mobile | LADY SONIA |
 | Katerina Hartlova *(guess)* | katerina-hartlova | KATERINA HARTLOVA |
 | MasterNico *(guess)* | masternico | MASTERNICO |
 | MeanFeetFetish *(guess)* | Mean Feet Fetish | MEAN FEET FETISH |
