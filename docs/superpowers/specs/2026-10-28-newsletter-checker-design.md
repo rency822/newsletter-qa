@@ -78,7 +78,17 @@ The default table is in Appendix A. Studios marked *(guess)* were inferred and s
 - **Schedule mode:**
   - The expected set is every published entry in the window whose site label maps to a studio of this program.
   - Each newsletter scene is then compared against all schedule entries for its studio, across all dates and statuses, so that out-of-window and unpublished scenes can be classified.
-- **IndieBucks mode:** the coworker list is the expected set, and matching is by title only. There is no studio mapping and no dates.
+- **IndieBucks mode:** the coworker list is the expected set. There is no studio mapping and there are no dates.
+  - **Line parsing:** each line splits into a code (before the first ` - `), a title, and an optional trailing note in parentheses, e.g. `(No 10 min tube for this scene)`. The note is shown in the report and is not used for matching.
+  - **Model hint from the code:** the code is split on `_`. The site prefix and IDs (e.g. `boyn1253`) and part markers (e.g. `part04`) are dropped. The remaining tokens (e.g. `romeotwink`, `mitchschif`) are compared with the newsletter scene's models, after the model names are lowercased and their spaces removed.
+  - **Score:** title similarity, plus a bonus of +0.15 for each model token that matches, capped at 1.0. The same one-to-one greedy assignment is used as in schedule mode.
+  - **Mistitled line:** when a line's best pairing is a newsletter scene whose title differs but whose models match, the row is flagged ⚠️ **Title mismatch**. The row shows both titles.
+  - **Typos:** close but inexact titles (e.g. "an Madrox & Yuri…" vs "Ian Madrox & Yuri…") are marked ✅ Fuzzy match.
+  - **Fixture expectations** (the Oct 21 IndieBucks Fetish issue and the 17-line coworker list):
+    - 16 matched or fuzzy matched
+    - `boyn1253_romeotwink_mitchschif_part04`, listed as "Cute Boy Gets Punished & Fucked - Part 1", flagged ⚠️ Title mismatch against "Using A New Sub Boy - Part 4"
+    - "Ticklish Sub Surrenders To Master Teko pure Tickling" flagged ⚠️ Not found, because it is in the newsletter but not in the list
+    - 0 missing
 
 ## 8. Result statuses
 
@@ -91,6 +101,7 @@ The default table is in Appendix A. Studios marked *(guess)* were inferred and s
 | ⚠️ Not published | the newsletter scene matches an entry that is scheduled, unpublished, or encoding |
 | ⚠️ Not found | no schedule entry (or coworker line) matches the newsletter scene |
 | ⚠️ Unknown studio | the newsletter section header is not in the mapping table |
+| ⚠️ Title mismatch | (IndieBucks) the coworker line's code models match a newsletter scene, but the titles differ |
 
 ## 9. Report UI
 
@@ -138,7 +149,7 @@ The default table is in Appendix A. Studios marked *(guess)* were inferred and s
   - "Balloon Tits Jennifer Is Back For More Of Roberts Cock" fuzzy- or exact-matches "…Robert's Cock"
   - the Dirty Auditions duplicates merge into one entry
   - `test1` through `test4` and `TEST_…` titles are excluded
-  - the IndieBucks parser extracts all 18 scenes from the Oct 21 issue; the sample coworker list (17 lines, from a different IndieBucks release) parses into `code` and `title`
+  - the IndieBucks parser extracts all 18 scenes from the Oct 21 issue; the matching 17-line coworker list gives the results listed in §7 (IndieBucks mode)
 - **End-to-end:** the built page is loaded in headless Chromium, the fixtures are fed in, and the summary counts are checked.
 
 ## 13. Out of scope
