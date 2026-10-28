@@ -82,3 +82,45 @@ export function checkSchedule({newsletter, entries, coveredDays, mapping, progra
   }
   return {rows, uncoveredDays};
 }
+
+const modelKey = (m) => m.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+export function checkIndieBucks({newsletter, list}) {
+  const scenes = [];
+  for (const section of newsletter.sections) for (const sc of section.scenes) scenes.push({sc, header: section.header});
+  const pairs = [];
+  for (const line of list) {
+    for (const s of scenes) {
+      const t = dice(line.title, s.sc.title);
+      const keys = (s.sc.models || []).map(modelKey);
+      const hits = line.modelTokens.filter((tok) => keys.some((k) => k.includes(tok))).length;
+      const eligible = t >= FUZZY_MIN || (hits > 0 && hits === line.modelTokens.length);
+      if (eligible) pairs.push({a: line, b: s, score: t + 0.15 * hits, t});
+    }
+  }
+  const kept = assign(pairs, 0);
+  const byScene = new Map(kept.map((p) => [p.b, p]));
+  const usedLines = new Set(kept.map((p) => p.a));
+  const rows = [];
+  for (const s of scenes) {
+    const p = byScene.get(s);
+    const base = {studio: s.header, newsletterTitle: s.sc.title, fhg: s.sc.fhg ?? null};
+    if (!p) {
+      rows.push(row({...base, status: 'not-found', note: 'No coworker list line matches this scene'}));
+      continue;
+    }
+    const line = p.a;
+    const common = {...base, scheduleTitle: line.title, code: line.code, note: line.note, score: Math.round(p.score * 1000) / 1000};
+    if (p.t >= FUZZY_MIN) {
+      const exact = normalizeTitle(line.title) === normalizeTitle(s.sc.title);
+      rows.push(row({...common, status: exact ? 'matched' : 'fuzzy'}));
+    } else {
+      rows.push(row({...common, status: 'title-mismatch'}));
+    }
+  }
+  for (const line of list) {
+    if (usedLines.has(line)) continue;
+    rows.push(row({status: 'missing', studio: null, scheduleTitle: line.title, code: line.code, note: line.note}));
+  }
+  return {rows};
+}
