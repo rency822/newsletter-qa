@@ -10,7 +10,10 @@ test('row counts per program', () => {
   assert.equal(m.filter((r) => r.program === 'kennyspennies').length, 14);
 });
 test('five Kenny guesses flagged', () => {
-  assert.equal(m.filter((r) => r.guess).length, 5);
+  assert.deepEqual(
+    m.filter((r) => r.guess).map((r) => r.studio),
+    ['Lady-Sonia', 'Katerina Hartlova', 'MasterNico', 'MeanFeetFetish', 'MissMalorieSwitch'],
+  );
 });
 test('host-qualified Sextapes', () => {
   assert.equal(studioForSite(m, 'radicalcash', site('Sex Tapes', 'admin.sextapes.com')), 'Sextapes');
@@ -32,7 +35,8 @@ test('other program excluded', () => {
 test('alterotic model labels are host-qualified', () => {
   assert.equal(studioForSite(m, 'radicalcash', site('Kyla Keys', 'admin.alterotic.com')), 'Alterotic');
   assert.equal(studioForSite(m, 'radicalcash', site('Kyla Keys', 'admin.other.com')), null);
-  assert.equal(studioForSite(m, 'radicalcash', site('Alterotic', 'admin.any.com')), 'Alterotic');
+  assert.equal(studioForSite(m, 'radicalcash', site('Alterotic', 'admin.alterotic.com')), 'Alterotic');
+  assert.equal(studioForSite(m, 'radicalcash', site('Alterotic', 'admin.any.com')), null);
 });
 test('header matching is normalized', () => {
   assert.equal(studioForHeader(m, 'radicalcash', "LIL D'S PLAYHOUSE"), 'LildPlayHouse');

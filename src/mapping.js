@@ -4,7 +4,7 @@ import { normalizeTitle } from './normalize.js';
 // A label "X @ host" matches only that admin host; a plain label matches any host.
 export const DEFAULT_MAPPING = [
   { studio: 'AD4X', program: 'radicalcash', labels: ['AD4X', 'Casting @ admin.ad4x.com', 'Casting Party @ admin.ad4x.com', 'Pixie Dust @ admin.ad4x.com'], headers: ['AD4X'] },
-  { studio: 'Alterotic', program: 'radicalcash', labels: ['Alterotic', 'Kyla Keys @ admin.alterotic.com', 'Madame Ouija @ admin.alterotic.com', 'Maya Romero @ admin.alterotic.com', 'Michelle Masque @ admin.alterotic.com', 'Robin Coffins @ admin.alterotic.com', 'Taylor Nicole @ admin.alterotic.com', 'TigerLilly @ admin.alterotic.com', 'Titi Ramone @ admin.alterotic.com'], headers: ['ALTEROTIC'] },
+  { studio: 'Alterotic', program: 'radicalcash', labels: ['Alterotic @ admin.alterotic.com', 'Kyla Keys @ admin.alterotic.com', 'Madame Ouija @ admin.alterotic.com', 'Maya Romero @ admin.alterotic.com', 'Michelle Masque @ admin.alterotic.com', 'Robin Coffins @ admin.alterotic.com', 'Taylor Nicole @ admin.alterotic.com', 'TigerLilly @ admin.alterotic.com', 'Titi Ramone @ admin.alterotic.com'], headers: ['ALTEROTIC'] },
   { studio: 'AmazingFilms', program: 'radicalcash', labels: ['Amazing Films'], headers: ['AMAZING FILMS'] },
   { studio: 'BJRaw', program: 'radicalcash', labels: ['BJ Raw', 'BJ Raw BTS', 'BJ Raw Interviews', 'Reels @ admin.bjraw.com'], headers: ['BJ RAW'] },
   { studio: 'DickHDdaily', program: 'radicalcash', labels: ['Dick Hd Daily'], headers: ['DICK HD DAILY'] },
