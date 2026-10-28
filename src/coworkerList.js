@@ -18,7 +18,8 @@ export function parseCoworkerList(text) {
       }
       const modelTokens = left.split('_').slice(1)
         .filter(t => !/^part\d+$/i.test(t) && !/^\d+$/.test(t))
-        .map(t => t.toLowerCase());
+        .map(t => t.toLowerCase())
+        .filter(Boolean);
       rows.push({code: left, title, note, modelTokens});
     } else {
       rows.push({code: null, title: left, note: right || null, modelTokens: []});

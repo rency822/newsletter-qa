@@ -49,7 +49,11 @@ function tokenize(html) {
 export function parseNewsletter(html) {
   const tokens = tokenize(html);
   let releaseDate = null;
-  for (const t of tokens) {
+  // Spec 5.2: first "Month D, YYYY" after the newsletter heading (skip forwarding headers).
+  let start = tokens.findIndex((t) => /AFFILIATE NEWSLETTER|New Tube Clips/i.test(t.text));
+  if (start < 0) start = 0;
+  for (const t of tokens.slice(start)) {
+    if (/^(Date|Sent):/i.test(t.text)) continue;
     const m = DATE_RE.exec(t.text);
     if (m) {
       const mm = String(MONTHS.indexOf(m[1]) + 1).padStart(2, '0');

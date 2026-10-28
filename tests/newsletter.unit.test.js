@@ -61,3 +61,13 @@ test('IndieBucks parsing', () => {
 test('LF line endings (pasted text)', () => {
   assert.equal(parseEml(RC.replace(/\r\n/g, '\n')).html.length > 1000, true);
 });
+
+test('release date is the one after the newsletter heading, not a forwarding header', () => {
+  const html = '<html><body><p>Sent: Thursday, October 22, 2026 3:00 AM</p><p>Date: October 21, 2026</p>'
+    + '<table><tr><td>AFFILIATE NEWSLETTER</td></tr><tr><td>October 26, 2026</td></tr></table></body></html>';
+  assert.equal(parseNewsletter(html).releaseDate, '2026-10-26');
+});
+
+test('release date falls back to first date when no heading exists', () => {
+  assert.equal(parseNewsletter('<p>Sent: May 1, 2026</p><p>June 2, 2026</p>').releaseDate, '2026-06-02');
+});

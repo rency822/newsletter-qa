@@ -26,3 +26,8 @@ test('accepts CRLF line endings', () => {
   assert.equal(rows.length, 17);
   assert.equal(rows[0].title, 'Tickle me, coach: I can take it!');
 });
+
+test('empty model tokens are dropped', () => {
+  assert.deepEqual(parseCoworkerList('abc1_ - T')[0].modelTokens, []);
+  assert.deepEqual(parseCoworkerList('abc1__x_ - T')[0].modelTokens, ['x']);
+});
