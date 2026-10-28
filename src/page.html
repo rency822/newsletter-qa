@@ -1,4 +1,5 @@
 <title>Newsletter Checker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <style>
 :root {
   --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f4; --text: #1b1f27; --muted: #5a6372;
@@ -27,7 +28,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-.wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
 h1 { font-size: 20px; margin: 0 0 2px; }
 h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
 .sub { color: var(--muted); margin: 0 0 16px; }
@@ -52,7 +54,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-
   outline: 2px solid var(--focus); outline-offset: 2px; }
 button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 .hint { color: var(--muted); font-size: 12px; margin: 4px 0 0; }
-#window-label { font-weight: 600; margin-top: 8px; }
+#window-label { font-weight: 600; margin-top: 8px; font-variant-numeric: tabular-nums; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
 #errors:empty { display: none; }
 #errors { margin-bottom: 14px; }
@@ -62,7 +64,7 @@ button[aria-pressed="true"] { background: var(--accent); color: var(--accent-tex
 #summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 #summary[hidden], #output[hidden], [hidden] { display: none !important; }
 .stat { flex: 1 1 100px; border-radius: 8px; padding: 10px 14px; border: 1px solid var(--border); }
-.stat b { display: block; font-size: 26px; line-height: 1.1; }
+.stat b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .stat.ok { background: var(--ok-bg); color: var(--ok-fg); }
 .stat.missing { background: var(--bad-bg); color: var(--bad-fg); }
 .stat.review { background: var(--warn-bg); color: var(--warn-fg); }
@@ -77,7 +79,7 @@ tr.group td { background: var(--surface-2); font-weight: 700; padding: 6px 10px;
 .chip.bad { background: var(--bad-bg); color: var(--bad-fg); }
 .chip.warn { background: var(--warn-bg); color: var(--warn-fg); }
 .chip.neutral { background: var(--neutral-bg); color: var(--neutral-fg); }
-.nowrap { white-space: nowrap; }
+.nowrap { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .sched { color: var(--muted); font-size: 13px; }
 .note { color: var(--muted); font-size: 13px; }
 .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
@@ -87,13 +89,19 @@ summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
 details table { font-size: 13px; }
 details textarea { min-height: 60px; font-size: 12px; }
 .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn-fg); margin-left: 6px; }
-.expected-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+.expected-list { font-variant-numeric: tabular-nums; list-style: none; padding: 0; margin: 0; font-size: 13px; }
 .expected-list li { padding: 3px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .empty { color: var(--muted); padding: 16px 4px; }
+input[aria-invalid="true"] { outline: 2px solid var(--bad-fg); outline-offset: 1px; border-color: var(--bad-fg); }
+#run-header { font-weight: 600; font-variant-numeric: tabular-nums; margin-bottom: 10px; overflow-wrap: anywhere; }
+#empty-state { background: var(--surface); border: 1px dashed var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
+#empty-state ol { margin: 6px 0 0; padding-left: 20px; }
+#copy-fallback { display: block; width: 100%; margin-bottom: 10px; min-height: 110px; }
 .mapwrap { overflow-x: auto; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
 @media (max-width: 640px) {
-  .wrap { padding: 16px 16px 40px; }
+  .wrap { padding-block: 16px 40px; }
   #results-table thead { display: none; }
   #results-table, #results-table tbody { display: block; border: 0; background: none; }
   #results-table tr { display: block; }
@@ -161,7 +169,17 @@ details textarea { min-height: 60px; font-size: 12px; }
 
   <div id="errors" role="alert"></div>
 
+  <div id="empty-state">
+    <h2>How to run a check</h2>
+    <ol>
+      <li>Paste or choose the schedule page (for IndieBucks, paste the coworker list).</li>
+      <li>Choose the newsletter .eml file.</li>
+      <li>Press Run check.</li>
+    </ol>
+  </div>
+
   <div id="output" hidden>
+    <div id="run-header"></div>
     <div id="summary">
       <div class="stat ok"><b data-count="ok">0</b>OK (matched)</div>
       <div class="stat missing"><b data-count="missing">0</b>Missing</div>
@@ -169,16 +187,17 @@ details textarea { min-height: 60px; font-size: 12px; }
     </div>
     <div class="toolbar">
       <div id="filters" role="group" aria-label="Filter results">
-        <button type="button" data-filter="all" aria-pressed="true">All</button>
-        <button type="button" data-filter="problems" aria-pressed="false">Problems</button>
-        <button type="button" data-filter="missing" aria-pressed="false">Missing</button>
-        <button type="button" data-filter="review" aria-pressed="false">Review</button>
+        <button type="button" id="filter-all" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" id="filter-problems" data-filter="problems" aria-pressed="false">Problems</button>
+        <button type="button" id="filter-missing" data-filter="missing" aria-pressed="false">Missing</button>
+        <button type="button" id="filter-review" data-filter="review" aria-pressed="false">Review</button>
       </div>
       <span class="spacer"></span>
       <button type="button" id="copy-problems">Copy problems</button>
-      <button type="button" id="download-csv">Download CSV</button>
+      <button type="button" id="copy-csv">Copy CSV</button>
       <span id="copy-status" class="hint" role="status"></span>
     </div>
+    <textarea id="copy-fallback" readonly hidden aria-label="Text to copy" spellcheck="false"></textarea>
     <table id="results-table">
       <thead><tr><th>Status</th><th>Scene</th><th>Date</th><th>FHG</th><th>Details</th></tr></thead>
       <tbody id="results"></tbody>

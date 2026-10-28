@@ -51,8 +51,7 @@ function clearSavedMapping() {
 let mapping = loadMapping();
 let emlRaw = '';
 let lastRows = [];
-let lastProgram = '';
-let lastRelease = '';
+let lastMeta = null;
 
 function el(tag, props = {}, ...kids) {
   const n = document.createElement(tag);
@@ -79,11 +78,27 @@ function updateWindowLabel() {
 }
 function onReleaseChange() {
   const r = $('release-date').value;
+  const box = $('release-date');
   if (DATE_RE.test(r)) {
     genManual = false;
     $('generation-date').value = computeWindow(r).generation;
+    box.removeAttribute('aria-invalid');
+  } else {
+    genManual = false;
+    $('generation-date').value = '';
+    box.setAttribute('aria-invalid', 'true');
   }
   updateWindowLabel();
+}
+// Drop everything derived from the previous run so stale results can't be copied or misread.
+function invalidate() {
+  $('output').hidden = true;
+  lastRows = [];
+  showErrors([]);
+  $('expected-items').replaceChildren(el('li', {text: 'Run a schedule check to see the list.'}));
+  $('copy-fallback').hidden = true;
+  $('copy-status').textContent = '';
+  $('empty-state').hidden = false;
 }
 function updateProgramUi() {
   const ib = $('program').value === 'indiebucks';
@@ -97,12 +112,13 @@ function updateProgramUi() {
 // ---- inputs ----
 async function onEml(raw) {
   emlRaw = raw;
+  invalidate();
   try {
     const eml = parseEml(raw);
     const p = detectProgram(eml.subject);
     if (p) $('program').value = p;
     const nl = parseNewsletter(eml.html);
-    if (nl.releaseDate) $('release-date').value = nl.releaseDate;
+    $('release-date').value = nl.releaseDate || '';
     updateProgramUi();
     onReleaseChange();
   } catch (e) {
@@ -150,7 +166,7 @@ function applyFilter() {
   }
 }
 
-function renderRows(rows) {
+function renderRows(rows, program, meta) {
   const groups = new Map();
   for (const r of rows) {
     const k = r.studio || 'Unassigned';
@@ -167,7 +183,7 @@ function renderRows(rows) {
       const title = r.newsletterTitle || r.scheduleTitle || '';
       const tdTitle = el('td', {}, el('div', {text: title}));
       if (r.newsletterTitle && r.scheduleTitle && r.scheduleTitle !== r.newsletterTitle) {
-        tdTitle.append(el('div', {class: 'sched', text: 'Schedule: ' + r.scheduleTitle}));
+        tdTitle.append(el('div', {class: 'sched', text: (program === 'indiebucks' ? 'List: ' : 'Schedule: ') + r.scheduleTitle}));
       }
       const tdFhg = el('td', {'data-label': 'FHG'});
       if (r.fhg) {
@@ -186,25 +202,27 @@ function renderRows(rows) {
   }
   const s = summarize(rows);
   for (const k of ['ok', 'missing', 'review']) document.querySelector(`#summary [data-count=${k}]`).textContent = String(s[k]);
+  $('run-header').textContent = meta;
+  $('empty-state').hidden = true;
   $('output').hidden = false;
   applyFilter();
 }
 
 function renderExpected(entries, program, win, rows) {
   const ul = $('expected-items');
-  const inNl = new Set(rows.filter((r) => isOk(r.status)).map((r) => (r.scheduleTitle || '').toLowerCase()));
+  const inNl = new Set(rows.filter((r) => isOk(r.status)).map((r) => `${r.studio}|${(r.scheduleTitle || '').toLowerCase()}|${r.date}`));
   const items = entries
     .filter((e) => e.status === 'published' && e.hasVideo && e.date >= win.start && e.date <= win.end)
     .map((e) => ({e, studio: studioForSite(mapping, program, e)}))
     .filter((x) => x.studio)
     .sort((a, b) => a.studio.localeCompare(b.studio) || a.e.date.localeCompare(b.e.date));
   ul.replaceChildren(...(items.length
-    ? items.map(({e, studio}) => el('li', {text: `${inNl.has(e.title.toLowerCase()) ? '✓' : '✗'} ${studio} – ${e.title} (${fmtDate(e.date)})`}))
+    ? items.map(({e, studio}) => el('li', {text: `${inNl.has(`${studio}|${e.title.toLowerCase()}|${e.date}`) ? '✓' : '✗'} ${studio} – ${e.title} (${fmtDate(e.date)})`}))
     : [el('li', {text: 'No expected entries in this window.'})]));
 }
 
 async function run() {
-  showErrors([]);
+  invalidate();
   const program = $('program').value;
   const release = $('release-date').value;
   const raw = $('eml-paste').value.trim() ? $('eml-paste').value : emlRaw;
@@ -213,13 +231,18 @@ async function run() {
     const newsletter = parseNewsletter(parseEml(raw).html);
     if (!newsletter.sections.length) throw new Error('No scenes were found in that newsletter.');
     let rows;
+    let meta;
     const msgs = [];
+    const programName = $('program').selectedOptions[0].textContent;
+    const releaseText = fmtDate(release || newsletter.releaseDate);
     if (program === 'indiebucks') {
       const list = parseCoworkerList($('coworker-list').value);
       if (!list.length) throw new Error('Paste the coworker list first.');
       rows = checkIndieBucks({newsletter, list}).rows;
       $('expected-items').replaceChildren(el('li', {text: 'Not used for IndieBucks.'}));
+      meta = `${programName} · release ${releaseText || 'unknown'}`;
     } else {
+      if (!release && !genManual) throw new Error('Enter the release date (none was found in the newsletter).');
       const win = currentWindow();
       if (!win) throw new Error('Enter a valid generation date.');
       const htmls = await collectSchedules();
@@ -232,47 +255,47 @@ async function run() {
         msgs.push({kind: 'warn', text: `Schedule doesn't cover ${dates} — add the other month's page.`});
       }
       renderExpected(entries, program, win, rows);
+      meta = `${programName} · release ${releaseText || 'unknown'} · generated ${fmtDate(win.generation)} · window ${fmtDate(win.start)} – ${fmtDate(win.end)}, ${win.end.slice(0, 4)}`;
     }
-    lastRows = rows; lastProgram = program; lastRelease = release || newsletter.releaseDate || 'unknown';
+    lastRows = rows;
     showErrors(msgs);
-    renderRows(rows);
+    renderRows(rows, program, meta);
   } catch (e) {
-    $('output').hidden = true;
-    lastRows = [];
+    invalidate();
     showErrors([{kind: 'error', text: e.message}]);
   }
 }
 
 // ---- export ----
+let flashTimer = 0;
 function flash(msg) {
   $('copy-status').textContent = msg;
-  setTimeout(() => { $('copy-status').textContent = ''; }, 2500);
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { $('copy-status').textContent = ''; }, 6000);
 }
-async function copyProblems() {
-  const text = toCopyText(lastRows);
-  if (!text) return flash('No problems to copy.');
+// One helper for every copy button: clipboard write inside the click handler, textarea fallback on rejection.
+async function copyText(text, count) {
+  const fb = $('copy-fallback');
+  fb.hidden = true;
   try {
     await navigator.clipboard.writeText(text);
-    flash('Copied.');
+    flash(`Copied ${count} line${count === 1 ? '' : 's'}`);
   } catch {
-    const ta = el('textarea', {'aria-hidden': 'true', style: 'position:fixed;opacity:0'});
-    ta.value = text;
-    document.body.append(ta);
-    ta.select();
-    let ok = false;
-    try { ok = document.execCommand('copy'); } catch { /* ignore */ }
-    ta.remove();
-    flash(ok ? 'Copied.' : 'Copy failed.');
+    fb.value = text;
+    fb.hidden = false;
+    fb.focus();
+    fb.select();
+    flash('Select and copy the text below.');
   }
 }
-function downloadCsv() {
-  const blob = new Blob([toCsv(lastRows)], {type: 'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = el('a', {href: url, download: `newsletter-check-${lastProgram}-${lastRelease}.csv`});
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+function copyProblems() {
+  const text = toCopyText(lastRows);
+  if (!text) return flash('No problems to copy.');
+  return copyText(text, text.split('\n').length);
+}
+function copyCsv() {
+  if (!lastRows.length) return flash('Nothing to copy.');
+  return copyText(toCsv(lastRows), lastRows.length);
 }
 
 // ---- mapping editor ----
@@ -283,9 +306,9 @@ function renderMapping() {
   mapping.forEach((r, i) => {
     const studio = el('td', {'data-label': 'Studio', text: r.studio});
     if (r.guess) studio.append(el('span', {class: 'tag', text: 'guess'}));
-    const labels = el('textarea', {'aria-label': `${r.studio} schedule labels`, 'data-i': String(i), 'data-f': 'labels', rows: '3'});
+    const labels = el('textarea', {id: `map-labels-${i}`, 'aria-label': `${r.studio} schedule labels`, 'data-i': String(i), 'data-f': 'labels', rows: '3'});
     labels.value = r.labels.join('\n');
-    const headers = el('textarea', {'aria-label': `${r.studio} newsletter headers`, 'data-i': String(i), 'data-f': 'headers', rows: '2'});
+    const headers = el('textarea', {id: `map-headers-${i}`, 'aria-label': `${r.studio} newsletter headers`, 'data-i': String(i), 'data-f': 'headers', rows: '2'});
     headers.value = r.headers.join('\n');
     body.append(el('tr', {}, studio, el('td', {'data-label': 'Program', text: r.program}),
       el('td', {}, labels), el('td', {}, headers)));
@@ -295,8 +318,8 @@ function renderMapping() {
 // ---- wiring ----
 function addSlot() {
   const n = document.querySelectorAll('#schedule-slots .slot').length + 1;
-  const ta = el('textarea', {'aria-label': `Schedule page ${n} HTML`, placeholder: `Schedule page ${n}: paste HTML`, spellcheck: 'false'});
-  const fi = el('input', {type: 'file', accept: '.html,.htm,text/html', multiple: '', 'aria-label': `Schedule page ${n} file(s)`});
+  const ta = el('textarea', {id: `schedule-input-${n}`, 'aria-label': `Schedule page ${n} HTML`, placeholder: `Schedule page ${n}: paste HTML`, spellcheck: 'false'});
+  const fi = el('input', {id: `schedule-file-${n}`, type: 'file', accept: '.html,.htm,text/html', multiple: '', 'aria-label': `Schedule page ${n} file(s)`});
   $('schedule-slots').append(el('div', {class: 'slot'}, ta, fi));
   ta.focus();
 }
@@ -308,18 +331,27 @@ $('eml-file').addEventListener('change', async (e) => {
   $('eml-paste').value = '';
   await onEml(await f.text());
 });
-$('eml-paste').addEventListener('input', () => { if ($('eml-paste').value.trim()) onEml($('eml-paste').value); });
-$('program').addEventListener('change', updateProgramUi);
-$('release-date').addEventListener('input', onReleaseChange);
-$('release-date').addEventListener('change', onReleaseChange);
-$('generation-date').addEventListener('input', () => { genManual = true; updateWindowLabel(); });
+$('eml-paste').addEventListener('input', () => {
+  const v = $('eml-paste').value;
+  if (v.trim()) onEml(v);
+  else {
+    if (!$('eml-file').files.length) emlRaw = '';
+    invalidate();
+  }
+});
+$('program').addEventListener('change', () => { invalidate(); updateProgramUi(); });
+for (const ev of ['input', 'change']) {
+  $('release-date').addEventListener(ev, () => { invalidate(); onReleaseChange(); });
+  $('generation-date').addEventListener(ev, () => { invalidate(); genManual = true; updateWindowLabel(); });
+  $('schedule-slots').addEventListener(ev, invalidate);
+}
 $('run').addEventListener('click', run);
 $('filters').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-filter]');
   if (b) { activeFilter = b.dataset.filter; applyFilter(); }
 });
 $('copy-problems').addEventListener('click', copyProblems);
-$('download-csv').addEventListener('click', downloadCsv);
+$('copy-csv').addEventListener('click', copyCsv);
 $('mapping-body').addEventListener('input', (e) => {
   const t = e.target;
   if (!t.dataset || t.dataset.i == null) return;
