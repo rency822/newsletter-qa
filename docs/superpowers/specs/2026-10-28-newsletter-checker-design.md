@@ -51,6 +51,8 @@ The program is auto-detected from the email subject prefix (`RadicalCash -`, `Ke
 
 ### 5.2 Newsletter (.eml)
 
+- **Nov 2026 template:** emails that contain `Scene_Video_FHG` elements are read by class: `Site_Name` starts a section, `Scene_Title` a scene, `Scene_Models` gives the models, and the first `Scene_Video_FHG` gives the FHG. The FHG is the visible link text, because the `href` goes through a tracking redirect. Older emails (no `Scene_Video_FHG`) use the rules below. Studio headings are compared without spaces ("XXX TRYOUT" = "XXXTRYOUT").
+
 - The email reader decodes MIME, handling quoted-printable and base64 bodies, and selects the `text/html` part.
 - Studio sections are found as the header text immediately preceding `Latest Tools`.
 - Within a section, each scene contributes a title, a Video FHG URL (if present), and models (if present). The trailing slug of the FHG URL, e.g. `.../gallery/6ad9…/birthday-surprise`, is kept as a secondary match key.

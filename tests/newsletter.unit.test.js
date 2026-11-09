@@ -71,3 +71,38 @@ test('release date is the one after the newsletter heading, not a forwarding hea
 test('release date falls back to first date when no heading exists', () => {
   assert.equal(parseNewsletter('<p>Sent: May 1, 2026</p><p>June 2, 2026</p>').releaseDate, '2026-06-02');
 });
+
+// ---- new template (Nov 2026): labelled with Site_Name / Scene_Title / Scene_Models / Scene_Video_FHG ----
+const KP2 = rd('kennyspennies-2026-11-09.eml');
+const RC2 = rd('radicalcash-2026-11-09.eml');
+
+test('new template: Kenny\'s Pennies studios, scenes and date', () => {
+  const kp = parseNewsletter(parseEml(KP2).html);
+  assert.equal(kp.releaseDate, '2026-11-09');
+  assert.equal(kp.sections.length, 10);
+  assert.equal(kp.sections.flatMap(s => s.scenes).length, 13);
+  assert.deepEqual(kp.sections.map(s => s.header).slice(0, 3), ['MARISKA X', 'YUMMY COUPLE', 'RED XXX']);
+  const yc = kp.sections.find(s => s.header === 'YUMMY COUPLE');
+  assert.deepEqual(yc.scenes.map(s => s.title), ['Dinner Is Served', 'Favorite Facial', 'Skinny Dancer Drenched In Five Loads']);
+  const mx = kp.sections[0].scenes[0];
+  assert.deepEqual(mx.models, ['Calisi Ink', 'Dries Breyne']);
+  assert.equal(mx.slug, 'calisi-fucking-dries-during-meeting-at-work');
+  assert.equal(mx.fhg, 'https://vipmembers.yourpornpartner.com/gallery/6ae46b6f3fe81/calisi-fucking-dries-during-meeting-at-work');
+  assert.equal(detectProgram(parseEml(KP2).subject), 'kennyspennies');
+});
+
+test('new template: RadicalCash studios, scenes, tracked links', () => {
+  const rc = parseNewsletter(parseEml(RC2).html);
+  assert.equal(rc.releaseDate, '2026-11-09');
+  assert.equal(rc.sections.length, 24);
+  assert.equal(rc.sections.flatMap(s => s.scenes).length, 30);
+  const wank = rc.sections.find(s => s.header === 'WANKITNOW');
+  assert.deepEqual(wank.scenes.map(s => s.title), ['Cinema Date', 'Date Night', 'Evening Relax', 'Helping Hand', 'Stay and Wank']);
+  const hw = rc.sections.find(s => s.header === 'HARDWERK').scenes[0];
+  assert.equal(hw.title, 'Session Laia Femme, E.urko, Tallo');
+  assert.deepEqual(hw.models, ['Laia Femme', 'E.Urko', 'Tallo']);
+  // the href goes through an awstrack.me redirect; the visible address is the real FHG
+  assert.ok(hw.fhg.startsWith('https://hardwerk.yourpornpartner.com/gallery/'));
+  assert.equal(hw.slug, 'session-laia-femme-eurko-tallo');
+  assert.ok(rc.sections.some(s => s.header === "LIL D'S PLAYHOUSE"));
+});

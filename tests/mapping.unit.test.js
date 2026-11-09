@@ -9,10 +9,10 @@ test('row counts per program', () => {
   assert.equal(m.filter((r) => r.program === 'radicalcash').length, 66);
   assert.equal(m.filter((r) => r.program === 'kennyspennies').length, 14);
 });
-test('five Kenny guesses flagged', () => {
+test('four Kenny guesses flagged; Miss Malorie Switch confirmed', () => {
   assert.deepEqual(
     m.filter((r) => r.guess).map((r) => r.studio),
-    ['Lady-Sonia', 'Katerina Hartlova', 'MasterNico', 'MeanFeetFetish', 'MissMalorieSwitch'],
+    ['Lady-Sonia', 'Katerina Hartlova', 'MasterNico', 'MeanFeetFetish'],
   );
 });
 test('host-qualified Sextapes', () => {
@@ -43,4 +43,10 @@ test('header matching is normalized', () => {
   assert.equal(studioForHeader(m, 'radicalcash', 'Lil Ds Playhouse'), 'LildPlayHouse');
   assert.equal(studioForHeader(m, 'kennyspennies', 'RED XXX'), 'Red-XXX');
   assert.equal(studioForHeader(m, 'radicalcash', 'RED XXX'), null);
+});
+
+test('headers match regardless of spacing (new template)', () => {
+  assert.equal(studioForHeader(m, 'radicalcash', 'XXX TRYOUT'), 'XXXTryout');
+  assert.equal(studioForHeader(m, 'radicalcash', 'DEEP THROAT SIRENS'), 'DeepThroatSirens');
+  assert.equal(studioForHeader(m, 'radicalcash', 'XXXTRYOUT'), 'XXXTryout');
 });

@@ -82,7 +82,7 @@ export const DEFAULT_MAPPING = [
   { studio: 'Katerina Hartlova', program: 'kennyspennies', labels: ['katerina-hartlova'], headers: ['KATERINA HARTLOVA'], guess: true },
   { studio: 'MasterNico', program: 'kennyspennies', labels: ['masternico'], headers: ['MASTERNICO'], guess: true },
   { studio: 'MeanFeetFetish', program: 'kennyspennies', labels: ['Mean Feet Fetish'], headers: ['MEAN FEET FETISH'], guess: true },
-  { studio: 'MissMalorieSwitch', program: 'kennyspennies', labels: ['Miss Malorie Switch'], headers: ['MISS MALORIE SWITCH'], guess: true },
+  { studio: 'MissMalorieSwitch', program: 'kennyspennies', labels: ['Miss Malorie Switch'], headers: ['MISS MALORIE SWITCH'] },
 ];
 
 function labelMatches(label, entry) {
@@ -99,10 +99,13 @@ export function studioForSite(mapping, program, entry) {
   return null;
 }
 
+// Spaces are ignored: the Nov 2026 template writes "XXX TRYOUT" and "DEEP THROAT SIRENS".
+const headerKey = (x) => normalizeTitle(x).replace(/ /g, '');
+
 export function studioForHeader(mapping, program, header) {
-  const h = normalizeTitle(header);
+  const h = headerKey(header);
   for (const r of mapping) {
-    if (r.program === program && r.headers.some((x) => normalizeTitle(x) === h)) return r.studio;
+    if (r.program === program && r.headers.some((x) => headerKey(x) === h)) return r.studio;
   }
   return null;
 }

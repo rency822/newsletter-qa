@@ -46,6 +46,40 @@ function tokenize(html) {
   return tokens;
 }
 
+function slugOf(url) {
+  const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
+  return path.split('/').pop() || null;
+}
+
+const clean = (el) => (el.textContent || '').replace(/\s+/g, ' ').trim();
+
+// New template (Nov 2026): every part carries a class — Site_Name, Scene_Title, Scene_Models, Scene_Video_FHG.
+// Links go through a tracking redirect, so the FHG is the visible link text, not the href.
+function parseLabelled(doc) {
+  const sections = [];
+  let section = null;
+  let scene = null;
+  for (const el of doc.querySelectorAll('.Site_Name, .Scene_Title, .Scene_Models, .Scene_Video_FHG')) {
+    const cls = ` ${el.getAttribute('class') || ''} `;
+    const text = clean(el);
+    if (cls.includes(' Site_Name ')) {
+      section = { header: text, scenes: [] };
+      sections.push(section);
+      scene = null;
+    } else if (cls.includes(' Scene_Title ')) {
+      if (!section) { section = { header: '', scenes: [] }; sections.push(section); }
+      scene = { title: text, slug: null, fhg: null, models: [], clips: [] };
+      section.scenes.push(scene);
+    } else if (scene && cls.includes(' Scene_Models ')) {
+      scene.models = text.split(/,\s*/).filter(Boolean);
+    } else if (scene && cls.includes(' Scene_Video_FHG ') && !scene.fhg) {
+      scene.fhg = text;
+      scene.slug = slugOf(text);
+    }
+  }
+  return sections;
+}
+
 export function parseNewsletter(html) {
   const tokens = tokenize(html);
   let releaseDate = null;
@@ -62,6 +96,11 @@ export function parseNewsletter(html) {
     }
   }
 
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  // Scene_Video_FHG only exists in the Nov 2026 template (older IndieBucks mail has Scene_Title but not this).
+  if (doc.querySelector('.Scene_Video_FHG')) return { releaseDate, sections: parseLabelled(doc) };
+
+  // Older template (until Oct 2026): sections follow "Latest Tools", titles are bold colspan=2 cells.
   const sections = [];
   let section = null;
   let scene = null;
@@ -81,8 +120,7 @@ export function parseNewsletter(html) {
         i++;
       } else if (text === 'Video FHG:' && tokens[i + 1]) {
         scene.fhg = tokens[i + 1].text;
-        const path = scene.fhg.split(/[?#]/)[0].replace(/\/+$/, '');
-        scene.slug = path.split('/').pop() || null;
+        scene.slug = slugOf(scene.fhg);
         i++;
       } else if (/^\d+ Minutes$/.test(text)) {
         scene.clips.push(text);
