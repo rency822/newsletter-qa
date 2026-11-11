@@ -2,11 +2,13 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
   'September', 'October', 'November', 'December'];
 const DATE_RE = new RegExp(`(${MONTHS.join('|')}) (\\d{1,2}), (\\d{4})`);
 
-export function detectProgram(subject) {
+export function detectProgram(subject, from) {
   const s = (subject || '').trim().replace(/^(?:(?:fwd?|fw)\s*:\s*)+/i, '').trim();
   if (/^radicalcash\b/i.test(s)) return 'radicalcash';
   if (/^kennyspennies\b/i.test(s)) return 'kennyspennies';
   if (/^indiebucks/i.test(s)) return 'indiebucks';
+  // Single-site IndieBucks newsletters (e.g. "MyFriendsFeet - ...") are recognised by the sender.
+  if (/indiebucks/i.test(from || '')) return 'indiebucks';
   return null;
 }
 
@@ -59,7 +61,7 @@ function parseLabelled(doc) {
   const sections = [];
   let section = null;
   let scene = null;
-  for (const el of doc.querySelectorAll('.Site_Name, .Scene_Title, .Scene_Models, .Scene_Video_FHG')) {
+  for (const el of doc.querySelectorAll('.Site_Name, .Scene_Title, .Scene_Models, .Scene_Video_FHG, [class*="Video_"]')) {
     const cls = ` ${el.getAttribute('class') || ''} `;
     const text = clean(el);
     if (cls.includes(' Site_Name ')) {
@@ -75,6 +77,8 @@ function parseLabelled(doc) {
     } else if (scene && cls.includes(' Scene_Video_FHG ') && !scene.fhg) {
       scene.fhg = text;
       scene.slug = slugOf(text);
+    } else if (scene && /^\d+ Minutes$/.test(text) && / Video_\d+_Minutes /.test(cls)) {
+      scene.clips.push(text);
     }
   }
   return sections;
@@ -97,8 +101,8 @@ export function parseNewsletter(html) {
   }
 
   const doc = new DOMParser().parseFromString(html, 'text/html');
-  // Scene_Video_FHG only exists in the Nov 2026 template (older IndieBucks mail has Scene_Title but not this).
-  if (doc.querySelector('.Scene_Video_FHG')) return { releaseDate, sections: parseLabelled(doc) };
+  // Every template from Oct 2026 on labels its parts (Site_Name, Scene_Title, ...).
+  if (doc.querySelector('.Scene_Title')) return { releaseDate, sections: parseLabelled(doc) };
 
   // Older template (until Oct 2026): sections follow "Latest Tools", titles are bold colspan=2 cells.
   const sections = [];

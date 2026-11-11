@@ -115,7 +115,7 @@ async function onEml(raw) {
   invalidate();
   try {
     const eml = parseEml(raw);
-    const p = detectProgram(eml.subject);
+    const p = detectProgram(eml.subject, eml.from);
     if (p) $('program').value = p;
     const nl = parseNewsletter(eml.html);
     $('release-date').value = nl.releaseDate || '';

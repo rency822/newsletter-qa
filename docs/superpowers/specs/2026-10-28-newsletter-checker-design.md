@@ -51,7 +51,7 @@ The program is auto-detected from the email subject prefix (`RadicalCash -`, `Ke
 
 ### 5.2 Newsletter (.eml)
 
-- **Nov 2026 template:** emails that contain `Scene_Video_FHG` elements are read by class: `Site_Name` starts a section, `Scene_Title` a scene, `Scene_Models` gives the models, and the first `Scene_Video_FHG` gives the FHG. The FHG is the visible link text, because the `href` goes through a tracking redirect. Older emails (no `Scene_Video_FHG`) use the rules below. Studio headings are compared without spaces ("XXX TRYOUT" = "XXXTRYOUT").
+- **Labelled templates (IndieBucks since Oct 2026, all programs since Nov 2026):** emails that contain `Scene_Title` elements are read by class: `Site_Name` starts a section, `Scene_Title` a scene, `Scene_Models` gives the models, the first `Scene_Video_FHG` (when present) gives the FHG, and `Video_N_Minutes` links give the clips. The FHG is the visible link text, because the `href` goes through a tracking redirect. Older emails (no `Scene_Title`) use the rules below. Single-site IndieBucks newsletters (e.g. "MyFriendsFeet - ...") are detected as IndieBucks from the sender. Studio headings are compared without spaces ("XXX TRYOUT" = "XXXTRYOUT").
 
 - The email reader decodes MIME, handling quoted-printable and base64 bodies, and selects the `text/html` part.
 - Studio sections are found as the header text immediately preceding `Latest Tools`.

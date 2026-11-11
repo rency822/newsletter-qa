@@ -106,3 +106,43 @@ test('new template: RadicalCash studios, scenes, tracked links', () => {
   assert.equal(hw.slug, 'session-laia-femme-eurko-tallo');
   assert.ok(rc.sections.some(s => s.header === "LIL D'S PLAYHOUSE"));
 });
+
+// ---- new IndieBucks template (Nov 2026): labelled, but no Scene_Video_FHG; clips are Video_N_Minutes links ----
+const IB2 = rd('indiebucks-2026-11-11.eml');
+const MFF = rd('myfriendsfeet-2026-11-10.eml');
+
+test('new template: IndieBucksFetish studios, scenes, models and clips', () => {
+  const ib = parseNewsletter(parseEml(IB2).html);
+  assert.equal(ib.releaseDate, '2026-11-11');
+  assert.deepEqual(ib.sections.map(s => s.header).slice(0, 3), ['BADBOYBONDAGE', 'BADBOYSBOOTCAMP', 'BOYNAPPED']);
+  const bn = ib.sections.find(s => s.header === 'BOYNAPPED');
+  assert.deepEqual(bn.scenes.map(s => s.title), ['2 Boys For Mitch To Use - Part 3', 'Using A Twinky Fuck Boy - Part 1']);
+  assert.deepEqual(bn.scenes[0].models, ['Jonny Montero', 'Mitch Schif', 'Johnny Hakson']);
+  assert.deepEqual(bn.scenes[0].clips, ['5 Minutes', '10 Minutes']);
+  const ff = ib.sections.find(s => s.header === 'FOOTFRIENDS');
+  assert.deepEqual(ff.scenes.map(s => s.title), ['Mickey', 'Kelly']);
+  assert.deepEqual(ff.scenes[0].models, []);
+  assert.deepEqual(ff.scenes[0].clips, []);
+});
+
+test('old IndieBucks template parses the same through the labelled reader', () => {
+  const ib = parseNewsletter(parseEml(IB).html);
+  assert.equal(ib.sections.length, 10);
+  assert.equal(ib.sections.flatMap(s => s.scenes).length, 18);
+});
+
+test('MyFriendsFeet newsletter is an IndieBucks program', () => {
+  const eml = parseEml(MFF);
+  assert.equal(detectProgram(eml.subject, eml.from), 'indiebucks');
+  const nl = parseNewsletter(eml.html);
+  assert.equal(nl.releaseDate, '2026-11-10');
+  assert.deepEqual(nl.sections.map(s => s.header), ['MYFRIENDSFEET']);
+  assert.deepEqual(nl.sections[0].scenes.map(s => s.title),
+    ["Pedro M's Tickling Audition", "Tripp Talon's Size 14 Feet Worshiped", "Enzo's Size 13's"]);
+  assert.deepEqual(nl.sections[0].scenes[1].models, ['Riley', 'Tripp Tallon']);
+});
+
+test('detectProgram falls back to the IndieBucks sender for other IndieBucks sites', () => {
+  assert.equal(detectProgram('SomeNewSite - New Tube Clips & Content available!', 'IndieBucks <support@westbill.com>'), 'indiebucks');
+  assert.equal(detectProgram('SomeNewSite - New Tube Clips & Content available!', 'Someone <x@example.com>'), null);
+});
